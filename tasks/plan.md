@@ -56,21 +56,23 @@ To do it, open reittiloki.hsl.fi, load one central stop (for example Rautatiento
 **Verify:** Spot-check 3 departures in the script output against the Reittiloki UI.
 **Files:** `src/reittiloki_probe.py`, `docs/sources.md`
 
-### Task 2: Mobility Database API client (S–M)
+### Task 2: Mobility Database API client (S–M): done 6 Nov
+**Result:** one snapshot covers 30 Oct–1 Nov (`mdb-865-202611010130`), another covers 16–17 Oct (`mdb-865-202610180116`). Run with `python src/mdb.py 2026-10-30 2026-10-31 2026-11-01 2026-10-16 2026-10-17`. Details in `docs/sources.md`.
+
 Exchange the refresh token for an access token, list the datasets for `mdb-865`, and pick the snapshot whose service date range covers each study date. Reject any snapshot that looks broken: less than about 10 MB, or with no service range (the 27 Oct snapshot is one). Download the chosen snapshot and log its dataset ID and hash.
 
 **Acceptance**
-- [ ] `python -m src.mdb fetch 2026-10-31` downloads a valid snapshot covering that date and writes `data/raw/gtfs/<dataset_id>.zip`.
-- [ ] The comparison date gets its own snapshot through the same command.
-- [ ] The refresh token is read from `.env`, which is gitignored and never committed.
-- [ ] `data/raw/gtfs/manifest.csv` records the date, dataset_id, download time, service range, size and sha256.
+- [x] `python src/mdb.py 2026-10-31` downloads a valid snapshot covering that date and writes `data/raw/gtfs/<dataset_id>.zip`.
+- [x] The comparison date gets its own snapshot through the same command.
+- [x] The refresh token is read from `.env`, which is gitignored and never committed.
+- [x] `data/raw/gtfs/manifest.csv` records the date, dataset_id, download time, service range, size and sha256.
 
 **Verify:** An assert-based self-check shows that the selection logic picks the right snapshot from a hard-coded sample list, and that it rejects the broken one.
 **Files:** `src/mdb.py`, `.env.example`, `.gitignore`
 
 ### Checkpoint 1
-- [ ] Both API results are known.
-- [ ] We decide whether this is **scheduled-only** or **planned vs observed**, and whether the plan needs to change.
+- [x] Both API results are known.
+- [x] We decide whether this is **scheduled-only** or **planned vs observed**, and whether the plan needs to change. **Planned vs observed.** Reittiloki is public with 97% observation coverage. The window needs three service days (30 Oct–1 Nov).
 
 ---
 

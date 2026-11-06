@@ -36,7 +36,18 @@ Checked 6 Nov 2026 (Task 1). **Public, no login or API key needed.**
 
 ## Mobility Database (archived GTFS)
 
-Task 2. Not done yet.
+Checked 6 Nov 2026 (Task 2). Free account, refresh token in `.env` as `MDB_REFRESH_TOKEN`.
+
+- **Token:** `POST https://api.mobilitydatabase.org/v1/tokens` with `{"refresh_token": ...}`. This returns a short-lived `access_token`.
+- **Snapshots:** `GET /v1/gtfs_feeds/mdb-865/datasets?limit=100` with `Authorization: Bearer <access_token>`, newest first. There's about one snapshot per night. Each covers about 3 days back to 2 months ahead.
+- **Fields used:** `id`, `downloaded_at`, `service_date_range_start/end` (UTC, so 22:00Z or 21:00Z = Helsinki midnight), `zipped_folder_size_mb`, `hosted_url` (public, no token), `hash` (sha256).
+- **Selection:** for each study date, use the newest snapshot that covers it in Helsinki dates and isn't broken (has a range, ≥ 10 MB; the 27 Oct snapshot is 0.62 MB with no range).
+- **Client:** [src/mdb.py](../src/mdb.py). Run `python src/mdb.py <dates...>` or `--check`. The sha256 is checked against MDB, and each run is logged in `data/raw/gtfs/manifest.csv`.
+
+| Study dates | Snapshot | Service range |
+| --- | --- | --- |
+| 30 Oct – 1 Nov (Halloween) | `mdb-865-202611010130` | 30 Oct – 28 Dec |
+| 16–17 Oct (baseline) | `mdb-865-202610180116` | 16 Oct – 14 Dec |
 
 ## Licence
 
