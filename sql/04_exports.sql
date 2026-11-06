@@ -1,7 +1,4 @@
--- Small Tableau-ready views; src/export.py dumps them for each feed.
-
--- per route: unique label ("Tram H" vs "Train H"), display mode (light rail folded into tram),
--- and whether it ran a holiday (_PY) timetable
+-- Small Tableau-ready views; src/export.py dumps them for each feed
 CREATE OR REPLACE VIEW route_info AS
 SELECT route_id,
        initcap(min(mode)) || ' ' || min(route) AS route_label,

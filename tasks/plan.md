@@ -92,7 +92,10 @@ Run Postgres with PostGIS, either from the Windows installer with Stack Builder 
 **Verify:** ~~The departure count for one stop and hour matches the HSL timetable.~~ Matched Reittiloki instead: 1,032 = 1,032 at terminal 1000003.
 **Files:** `src/build_db.py`, `sql/00_study_dates.sql`, `sql/01_geometry.sql`, `sql/02_services.sql`, `sql/03_departures.sql`
 
-### Task 4: First two Tableau views (M)
+### Task 4: First two Tableau views (M): built 6 Nov (save to Tableau Public pending)
+**Result:** `python src/export.py` writes `data/exports/hsl_hourly.csv`, `hsl_stop_routes.csv` and `hsl_route_lines.geojson`. The dashboard (route map + hourly stacked bars + 3 BANs, Saturday/Routes parameters, click-a-route filter) was built in Tableau Public. Stops layer skipped for now.
+**Finding:** planned service is almost identical: Halloween 511,897 vs ordinary Saturday 511,709 (+0.04%), with only 22 of 266 routes changed. Of the 11 `_PY` (All Saints') routes, 8 have identical trip counts. The only real addition is Bus 24X (+270). The biggest differences are ordinary timetable changes (Train K +1,211, Bus 245A→245, Bus 712 gone). **The story moves to observed service (Phase 4).**
+
 Export small CSV or Hyper extracts and build two views:
 - a **route and stop map** filtered by mode
 - **departures by hour and mode** for 31 Oct
@@ -100,12 +103,12 @@ Export small CSV or Hyper extracts and build two views:
 Clicking a route should filter the chart.
 
 **Acceptance**
-- [ ] The dashboard opens with both views linked.
-- [ ] Each extract is under about 50 MB.
-- [ ] The time axis runs from 00:00 on 31 Oct to 04:00 on 1 Nov, in local time.
+- [x] The dashboard opens with both views linked.
+- [x] Each extract is under about 50 MB (largest 3.4 MB).
+- [x] The time axis runs from 00:00 on 31 Oct to 04:00 on 1 Nov, in local time.
 
 **Verify:** Compare the dashboard's hourly totals with a SQL query.
-**Files:** `sql/03_exports.sql`, `tableau/halloween.twb`
+**Files:** `sql/04_exports.sql`, `src/export.py`, `tableau/` (workbook)
 
 ### Checkpoint 2
 - [ ] Running from raw data to dashboard works end to end, repeatably, with one command or a short README.
