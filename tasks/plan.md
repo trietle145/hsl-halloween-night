@@ -78,17 +78,19 @@ Exchange the refresh token for an access token, list the datasets for `mdb-865`,
 
 ## Phase 2: One complete slice (concrete)
 
-### Task 3: GTFS to Postgres/PostGIS for the study window (M)
+### Task 3: GTFS to Postgres/PostGIS for the study window (M): done 6 Nov
+**Result:** `python src/build_db.py <zip> <halloween|baseline>` loads a feed into its own schema and runs `sql/*.sql` in order. The `departures` table has about 512k rows per feed. GTFS planned departures from the Rautatientori terminal on the 31 Oct service day = 1,032, **exactly matching Reittiloki**. All Saints' Day shows up as 11 `_La` services removed and replaced by date-only `_PY` (holiday) services on routes 13, 13H, 19, 24, 24X, 25, 37, 41, 42, H and the U train. There are no U-line buses in HSL GTFS. Total departures: Halloween 511,897 vs baseline 511,709, almost the same, so the story is in the details.
+
 Run Postgres with PostGIS, either from the Windows installer with Stack Builder or in Docker. Load `stops`, `routes`, `trips`, `stop_times`, `calendar`, `calendar_dates` and `shapes` into Postgres, building stop points and route shapes as PostGIS geometries. Work out which service_ids are active on each study date. Convert GTFS times past 24:00, such as 25:30:00, into real timestamps on 1 Nov. The window spans **three service days**: 30 Oct trips with 24+ hour times cover 00:00–~04:30 on 31 Oct (confirmed in Reittiloki, where the service day runs about 04:10 → 05:00 next day). The 00:00–04:00 tail on 1 Nov can come from two service days: 31 Oct trips with 24+ hour times, and 1 Nov trips with early times. Build departures for both service dates, then filter by real timestamp. The baseline needs the same treatment. Load `stop_times` with `COPY`, not row-by-row inserts.
 
 **Acceptance**
-- [ ] A `departures` table (date, stop_id, route, mode, trip_id, timestamp) exists, filtered to the study window.
-- [ ] A trip at 25:30 on 31 Oct shows up as 01:30 on 1 Nov.
-- [ ] U-line trips use the Sunday service on 31 Oct.
-- [ ] Departures from the 1 Nov service day that fall before 04:00 are included.
+- [x] A `departures` table (date, stop_id, route, mode, trip_id, timestamp) exists, filtered to the study window.
+- [x] A trip at 25:30 on 31 Oct shows up as 01:30 on 1 Nov (route 7H at 25:32 → 1 Nov 01:32).
+- [x] ~~U-line trips use the Sunday service on 31 Oct.~~ No U-line buses in the feed. Instead, 31 Oct uses `_PY` holiday services for 11 routes (13,906 departures in the window).
+- [x] Departures from the 1 Nov service day that fall before 04:00 are included (only 1 does; 30 Oct contributes 33,859 to the early hours of 31 Oct).
 
-**Verify:** The departure count for one stop and hour matches the HSL timetable.
-**Files:** `sql/00_schema.sql`, `sql/01_load.sql`, `sql/02_departures.sql`, `src/build_db.py`, `.env` (DB connection settings)
+**Verify:** ~~The departure count for one stop and hour matches the HSL timetable.~~ Matched Reittiloki instead: 1,032 = 1,032 at terminal 1000003.
+**Files:** `src/build_db.py`, `sql/00_study_dates.sql`, `sql/01_geometry.sql`, `sql/02_services.sql`, `sql/03_departures.sql`
 
 ### Task 4: First two Tableau views (M)
 Export small CSV or Hyper extracts and build two views:
