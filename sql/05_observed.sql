@@ -1,4 +1,4 @@
-DROP TABLE IF EXISTS observed_departures;
+DROP TABLE IF EXISTS observed_departures CASCADE;  -- 06 views depend on it; load_observed.py recreates them
 CREATE TABLE observed_departures AS
 -- same 28 h window as 03_departures.sql
 WITH study_window AS (
