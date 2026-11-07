@@ -51,6 +51,20 @@ Checked 6 Nov 2026 (Task 1). **Public, no login or API key needed.**
 - **Myyrmäki's +41/+53 is explained.** Reittiloki lists **arrival-only** terminal stops as departures. Route 4571 ends at stop 4150205, which GTFS has as `pickup_type = 1` (39 rows on 17 Oct). Route 7375 at 4150203 has no GTFS trips (2 rows). For Task 8 these rows are expected to be unmatched. Exclude or count them, don't treat them as missing.
 - **Request time:** 2–4 s for bus terminals, 6–8 s for the metro (bigger response). Budget ~5 s + 1 s sleep → **~490 calls ≈ 45–50 min**.
 - More cancellation types seen: `DEPARTURED_AFTER_NEXT_JOURNEY`, `LATE_DEPARTURE`. `TIS_ERROR` still dominates.
+### Batch (7 Nov 2026, Task 7)
+
+`python src/reittiloki_probe.py batch data/raw/gtfs/mdb-865-202611010130.zip 2026-10-16 2026-10-17 2026-10-30 2026-10-31`, log in `data/raw/reittiloki/batch.log`. Took 19 min (~2.4 s/call incl. 1 s sleep), 0 failures.
+
+| Service date | Departures | Observed | After midnight | Cancellation records (non-`TIS_ERROR`) |
+| --- | --- | --- | --- | --- |
+| 16 Oct (Fri) | 52,790 | 92.5% | 2,552 | 436 (134) |
+| 17 Oct (Sat) | 41,637 | 91.7% | 2,553 | 369 (91) |
+| 30 Oct (Fri) | 54,760 | 95.8% | 2,773 | 437 (124) |
+| 31 Oct (Sat) | 41,680 | 94.4% | 2,735 | 434 (126) |
+
+- 6 terminals return 0 departures on every date (2000210, 4000002, 4000003, 4000007, 6000201, 9600001). GTFS has 0 for them too.
+- `cancellations(date)` needs `cancellationSearch: {}` or the server throws. It is network-wide (`routeId` like `100HA5` includes a variant suffix).
+
 - **Coverage warning:** the 122 GTFS terminals hold only ~8.5% of window departures (bus 19k of 435k, tram 0 of 47k, ferry 0; metro and train almost fully). A terminal-only pull says little about trams or most buses.
 
 ## Mobility Database (archived GTFS)

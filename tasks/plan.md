@@ -139,25 +139,27 @@ Check HSL's terms for scripted Reittiloki use. Pull 3 terminals (one central, on
 **Files:** `docs/sources.md`
 **Dependencies:** none. **Blocks** Task 7 if the terms say no.
 
-### Task 7: Batch pull, cached and rate-limited (S)
+### Task 7: Batch pull, cached and rate-limited (S): done 7 Nov
+**Result:** `python src/reittiloki_probe.py batch <gtfs zip> <dates...>`. 488 terminal files + 4 cancellation files, 0 failures, rerun fetches 0. ~2.4 s/call (19 min). Observed 92–96% per date. 6 terminals are empty on every date and have 0 GTFS departures too. Spot-check against the UI still to do.
 Add a batch mode to `src/reittiloki_probe.py`: read terminal IDs from GTFS, loop over the 4 service dates, skip files that already exist, sleep ~1 s between calls, retry once on errors, and log failures.
 
 **Acceptance**
-- [ ] About 488 raw files in `data/raw/reittiloki/`. Failures listed, then retried successfully.
-- [ ] Rerunning makes 0 requests (everything cached).
-- [ ] `cancellations` saved for the 4 dates.
+- [x] About 488 raw files in `data/raw/reittiloki/`. Failures listed, then retried successfully.
+- [x] Rerunning makes 0 requests (everything cached).
+- [x] `cancellations` saved for the 4 dates.
 
 **Verify:** file count = terminals × dates. Spot-check 2 files against the Reittiloki UI.
 **Files:** `src/reittiloki_probe.py`
 **Dependencies:** Task 6. **Do this early:** retention is about 4 months, so 16–17 Oct data expires around mid-Feb 2027.
 
-### Task 8: Load observed data and join to planned (M) · good hands-on SQL
+### Task 8: Load observed data and join to planned (M): done 7 Nov
+**Result:** `python src/load_observed.py` (2.5 s) loads `public.observed` (190,867 raw rows) and runs `sql/05_observed.sql` per feed. Match rate: Halloween 98.6% (42,256 departures), baseline 96.9% (41,043). Fixes needed: dedupe one row per planned departure (Reittiloki lists each vehicle; ~2–3k multi-vehicle departures), metro route ids `31M1 7` → `31M1`, direction 1/2 → 0/1, timestamptz → local, match on terminal not stop (platform moves), prefer exact stop when a trip passes 2 platforms in one minute, `ANALYZE` after load. Unmatched: U-lines 7xxx (~160/feed, not in GTFS), terminal 9000001 route 9976, Hakaniemi baseline (847: GTFS snapshot has those buses 1 min later at another platform). Delay comes from Reittiloki itself, so unmatched rows still have delay, only mode is missing. Rautatientori after midnight: 15.3% vs 3.0% > 3 min late (n 163 / 166).
 Load the raw JSON into `public.observed` (feed, stop_id, route_id, direction, planned_ts, observed_ts, delay_s, cancellation_type). Join it to each feed's `departures` on stop + route + direction + planned timestamp, restricted to the study window.
 
 **Acceptance**
-- [ ] ≥ 95% of in-window Reittiloki rows match a planned GTFS departure. Unmatched rows are counted and explained.
-- [ ] `observed_departures` exists per feed, with `is_observed`, `delay_s` and `real_cancel` (cancellationType ≠ `TIS_ERROR`).
-- [ ] The loader is idempotent (a rerun gives the same row counts).
+- [x] ≥ 95% of in-window Reittiloki rows match a planned GTFS departure. Unmatched rows are counted and explained.
+- [x] `observed_departures` exists per feed, with `is_observed`, `delay_s` and `real_cancel` (cancellationType ≠ `TIS_ERROR`).
+- [x] The loader is idempotent (a rerun gives the same row counts).
 
 **Verify:** match rate per terminal. Any terminal below 90% is investigated (route ID mapping, time zones, `isNextDay`).
 **Files:** `src/load_observed.py`, `sql/05_observed.sql`

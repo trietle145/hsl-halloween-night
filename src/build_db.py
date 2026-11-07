@@ -41,7 +41,7 @@ def main():
 
     with connect() as conn:
         load_zip(conn, args.zip, args.schema)
-        for sql in sorted(Path("sql").glob("*.sql")):
+        for sql in sorted(Path("sql").glob("*.sql"))[:5]:  # 05+ need public.observed; load_observed.py runs them
             conn.execute(sql.read_text())
             print(f"  {args.schema}: ran {sql.name}")
 
