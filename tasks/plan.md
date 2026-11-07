@@ -126,13 +126,14 @@ Clicking a route should filter the chart.
 
 **Data plan (agreed 6 Nov):** Reittiloki `departures(terminalId, date)` for all 122 terminals (GTFS `location_type = 1`) × service dates 30 + 31 Oct and 16 + 17 Oct = about 490 requests. `cancellations(date)` gives the day's cancellations in one call. A full-journey query (`journeys`) exists if terminals turn out to be too origin-heavy.
 
-### Task 6: Terms check and pilot pull (S) · good hands-on task
+### Task 6: Terms check and pilot pull (S): done 7 Nov
+**Result:** terms unclear (no Reittiloki-specific terms), proceeding politely (1 req/s, cached). Pilot 1000003 / 4000006 / 1000111 × 4 dates: counts match GTFS within 0–3 except arrival-only terminal stops (Myyrmäki +41). ~5 s/call. Terminals cover only ~8.5% of departures (no trams). Details in `docs/sources.md`.
 Check HSL's terms for scripted Reittiloki use. Pull 3 terminals (one central, one suburban hub, one metro) × 4 dates with the existing probe, and check that the 30 Oct service date covers Sat 00:00–04:30.
 
 **Acceptance**
-- [ ] Terms outcome recorded in `docs/sources.md` (allowed / unclear / not allowed) with a link.
-- [ ] 12 raw files saved. Each returns planned + observed, and 30 Oct contains departures after midnight.
-- [ ] Request timing noted (seconds per call), to size the batch.
+- [x] Terms outcome recorded in `docs/sources.md` (allowed / unclear / not allowed) with a link.
+- [x] 12 raw files saved. Each returns planned + observed, and 30 Oct contains departures after midnight.
+- [x] Request timing noted (seconds per call), to size the batch.
 
 **Verify:** for one pilot terminal, planned count per service date = GTFS planned count (as with Rautatientori: 1,032 = 1,032).
 **Files:** `docs/sources.md`

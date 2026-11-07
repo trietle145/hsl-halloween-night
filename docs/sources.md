@@ -30,9 +30,28 @@ Checked 6 Nov 2026 (Task 1). **Public, no login or API key needed.**
 - Spot-checked 6 rows against the UI (terminal 1000003, 31 Oct): line 611 at 18:26, observed 18:26:14 ✓; line 600 at 18:30, observed 18:30:41 ✓; line 64 at 18:30, observed 18:30:11 ✓; line 78 at 18:30, observed 18:30:39 ✓; line 61 at 18:40 with no observation ✓; line 71 at 18:43 cancelled ✓.
 - Retention is about 4 months (per HSL), so 31 Oct data should be cached before about late Feb 2027.
 
-### Open
+### Terms of use (checked 7 Nov 2026, Task 6): **unclear**
 
-- [ ] Check Reittiloki / HSL terms of use for scripted access before the Phase 4 batch pulls. Keep pulls small and rate-limited.
+- No terms page found that covers Reittiloki or the Transitlog server API specifically. The endpoint is public with no key or registration.
+- HSL open data is CC BY 4.0 with attribution ([hsl.fi/en/opendata](https://hsl.fi/en/opendata)). The registration and API-key rules on [Digitransit terms](https://digitransit.fi/en/developers/apis/7-terms-of-use/) cover the Digitransit APIs, not Reittiloki.
+- The UI is open source ([transitlog-ui](https://github.com/HSLdevcom/transitlog-ui), AGPL-3.0), which says nothing about API use.
+- **Decision:** go ahead politely. Requests are sequential with about 1 s sleep between calls, results are cached so nothing is fetched twice, and the batch is one-off (~490 calls). If HSL objects, stop and ask.
+
+### Pilot (7 Nov 2026, Task 6)
+
+3 terminals × 4 service dates in `data/raw/reittiloki/terminal_<id>_<date>.json`.
+
+| Terminal | 16 Oct | 17 Oct | 30 Oct | 31 Oct | Observed | GTFS planned (16/17/30/31) |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1000003 Rautatientori (central) | 1,306 | 1,032 | 1,325 | 1,032 | 97–98% | 1,305 / 1,032 / 1,325 / 1,032 |
+| 4000006 Myyrmäki (suburban hub) | 1,242 | 1,038 | 1,266 | 1,038 | 92–95% | 1,189 / 997 / 1,213 / 997 |
+| 1000111 Itäkeskus metro | 582 | 503 | 579 | 503 | 90–97% | 582 / 503 / 582 / 503 |
+
+- **Night coverage is OK.** Each Friday file runs to about 05:00 Saturday (Rautatientori has ~198 departures after midnight). The metro stops around 00:01, so it adds nothing to the night signal.
+- **Myyrmäki's +41/+53 is explained.** Reittiloki lists **arrival-only** terminal stops as departures. Route 4571 ends at stop 4150205, which GTFS has as `pickup_type = 1` (39 rows on 17 Oct). Route 7375 at 4150203 has no GTFS trips (2 rows). For Task 8 these rows are expected to be unmatched. Exclude or count them, don't treat them as missing.
+- **Request time:** 2–4 s for bus terminals, 6–8 s for the metro (bigger response). Budget ~5 s + 1 s sleep → **~490 calls ≈ 45–50 min**.
+- More cancellation types seen: `DEPARTURED_AFTER_NEXT_JOURNEY`, `LATE_DEPARTURE`. `TIS_ERROR` still dominates.
+- **Coverage warning:** the 122 GTFS terminals hold only ~8.5% of window departures (bus 19k of 435k, tram 0 of 47k, ferry 0; metro and train almost fully). A terminal-only pull says little about trams or most buses.
 
 ## Mobility Database (archived GTFS)
 

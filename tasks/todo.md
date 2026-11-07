@@ -6,7 +6,7 @@ Details, acceptance criteria and verification for each task: `tasks/plan.md`.
 - [x] Signed off 6 Nov (Tasks 1–4 done, dashboard in `tableau/hsl.twb`)
 
 ## Phase 3: Observed service (start Task 6 → 7 first: data retention)
-- [ ] Task 6: Terms check + pilot pull, 3 terminals × 4 dates (S) · hands-on
+- [x] Task 6: Terms check + pilot pull, 3 terminals × 4 dates (S) · hands-on
 - [ ] Task 7: Batch pull, 122 terminals × 4 dates, cached + rate-limited (S)
 - [ ] Task 8: Load observed JSON + join to planned departures (M) · hands-on SQL
 - [ ] Task 9: Reliability metrics per hour × mode × feed (S) · hands-on SQL
