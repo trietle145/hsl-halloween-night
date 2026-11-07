@@ -2,7 +2,7 @@
 
 ## Reittiloki (observed + planned departures)
 
-Checked 6 Nov 2026 (Task 1). **Public, no login or API key needed.**
+Checked 6 Nov 2026. **Public, no login or API key needed.**
 
 - **Endpoint:** `POST https://reittiloki.hsl.fi/server/graphql/`
 - **Headers:** only `Content-Type: application/json`. The browser also sends cookies, including `transitlog-session`, but the same request without them returns byte-identical data. The default Python `urllib` User-Agent is accepted.
@@ -30,14 +30,14 @@ Checked 6 Nov 2026 (Task 1). **Public, no login or API key needed.**
 - Spot-checked 6 rows against the UI (terminal 1000003, 31 Oct): line 611 at 18:26, observed 18:26:14 ✓; line 600 at 18:30, observed 18:30:41 ✓; line 64 at 18:30, observed 18:30:11 ✓; line 78 at 18:30, observed 18:30:39 ✓; line 61 at 18:40 with no observation ✓; line 71 at 18:43 cancelled ✓.
 - Retention is about 4 months (per HSL), so 31 Oct data should be cached before about late Feb 2027.
 
-### Terms of use (checked 7 Nov 2026, Task 6): **unclear**
+### Terms of use (checked 7 Nov 2026): **unclear**
 
 - No terms page found that covers Reittiloki or the Transitlog server API specifically. The endpoint is public with no key or registration.
 - HSL open data is CC BY 4.0 with attribution ([hsl.fi/en/opendata](https://hsl.fi/en/opendata)). The registration and API-key rules on [Digitransit terms](https://digitransit.fi/en/developers/apis/7-terms-of-use/) cover the Digitransit APIs, not Reittiloki.
 - The UI is open source ([transitlog-ui](https://github.com/HSLdevcom/transitlog-ui), AGPL-3.0), which says nothing about API use.
 - **Decision:** go ahead politely. Requests are sequential with about 1 s sleep between calls, results are cached so nothing is fetched twice, and the batch is one-off (~490 calls). If HSL objects, stop and ask.
 
-### Pilot (7 Nov 2026, Task 6)
+### Pilot (7 Nov 2026)
 
 3 terminals × 4 service dates in `data/raw/reittiloki/terminal_<id>_<date>.json`.
 
@@ -48,10 +48,10 @@ Checked 6 Nov 2026 (Task 1). **Public, no login or API key needed.**
 | 1000111 Itäkeskus metro | 582 | 503 | 579 | 503 | 90–97% | 582 / 503 / 582 / 503 |
 
 - **Night coverage is OK.** Each Friday file runs to about 05:00 Saturday (Rautatientori has ~198 departures after midnight). The metro stops around 00:01, so it adds nothing to the night signal.
-- **Myyrmäki's +41/+53 is explained.** Reittiloki lists **arrival-only** terminal stops as departures. Route 4571 ends at stop 4150205, which GTFS has as `pickup_type = 1` (39 rows on 17 Oct). Route 7375 at 4150203 has no GTFS trips (2 rows). For Task 8 these rows are expected to be unmatched. Exclude or count them, don't treat them as missing.
+- **Myyrmäki's +41/+53 is explained.** Reittiloki lists **arrival-only** terminal stops as departures. Route 4571 ends at stop 4150205, which GTFS has as `pickup_type = 1` (39 rows on 17 Oct). Route 7375 at 4150203 has no GTFS trips (2 rows). When joining to GTFS these rows are expected to be unmatched. Exclude or count them, don't treat them as missing.
 - **Request time:** 2–4 s for bus terminals, 6–8 s for the metro (bigger response). Budget ~5 s + 1 s sleep → **~490 calls ≈ 45–50 min**.
 - More cancellation types seen: `DEPARTURED_AFTER_NEXT_JOURNEY`, `LATE_DEPARTURE`. `TIS_ERROR` still dominates.
-### Batch (7 Nov 2026, Task 7)
+### Batch (7 Nov 2026)
 
 `python src/reittiloki_probe.py batch data/raw/gtfs/mdb-865-202611010130.zip 2026-10-16 2026-10-17 2026-10-30 2026-10-31`, log in `data/raw/reittiloki/batch.log`. Took 19 min (~2.4 s/call incl. 1 s sleep), 0 failures.
 
@@ -69,7 +69,7 @@ Checked 6 Nov 2026 (Task 1). **Public, no login or API key needed.**
 
 ## Mobility Database (archived GTFS)
 
-Checked 6 Nov 2026 (Task 2). Free account, refresh token in `.env` as `MDB_REFRESH_TOKEN`.
+Checked 6 Nov 2026. Free account, refresh token in `.env` as `MDB_REFRESH_TOKEN`.
 
 - **Token:** `POST https://api.mobilitydatabase.org/v1/tokens` with `{"refresh_token": ...}`. This returns a short-lived `access_token`.
 - **Snapshots:** `GET /v1/gtfs_feeds/mdb-865/datasets?limit=100` with `Authorization: Bearer <access_token>`, newest first. There's about one snapshot per night. Each covers about 3 days back to 2 months ahead.

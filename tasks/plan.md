@@ -165,13 +165,14 @@ Load the raw JSON into `public.observed` (feed, stop_id, route_id, direction, pl
 **Files:** `src/load_observed.py`, `sql/05_observed.sql`
 **Dependencies:** Task 7 (can start on the pilot files from Task 6).
 
-### Task 9: Reliability metrics (S) · good hands-on SQL
+### Task 9: Reliability metrics (S): done 7 Nov
+**Result:** views `reliability_base` + `reliability` (hour × mode) in `sql/06_reliability.sql`; cross-feed checks in `sql/analysis/checks.sql`. Rautatientori after midnight 15.3% vs 3.0% (earlier 14.1 vs 2.6 was before dedupe). **Network-wide, bus only:** buses after midnight 35.9% vs 13.0% > 3 min late (median +60–100 s), evening 17.0 vs 11.2, day 11.2 vs 8.3, Fri-night early hours 23.0 vs 13.6. 12 of 13 terminals with n ≥ 30 are worse, 11 by > 5 pp; without Rautatientori + Hakaniemi still 23.2% vs 9.2%. Trains about the same (hours 26–27 worse, small n); metro has no night service; trams not covered. **Coverage caveat:** Hakaniemi baseline after midnight only 43% observed (146/337) vs 94% on Halloween; everything else 96–97% on both nights. Not yet checked: weather.
 A view with reliability per feed × window hour × mode: n planned, % observed, median and p90 delay, % more than 3 min late, and real cancellations. Plus a Halloween-minus-ordinary comparison.
 
 **Acceptance**
-- [ ] SQL reproduces the Rautatientori signal (14.1% vs 2.6% after midnight) when filtered to terminal 1000003.
-- [ ] Every cell carries its n. Cells with n < 30 are flagged.
-- [ ] One answer: is the after-midnight difference present across terminals, or driven by one or two?
+- [x] SQL reproduces the Rautatientori signal (14.1% vs 2.6% after midnight) when filtered to terminal 1000003.
+- [x] Every cell carries its n. Cells with n < 30 are flagged.
+- [x] One answer: is the after-midnight difference present across terminals, or driven by one or two?
 
 **Verify:** recompute one cell by hand from raw JSON in Python.
 **Files:** `sql/06_reliability.sql`
