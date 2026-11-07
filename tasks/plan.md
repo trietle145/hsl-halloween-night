@@ -21,13 +21,15 @@ The processing is done in SQL with PostgreSQL + PostGIS. The output is Tableau.
 ## Dependency graph
 
 ```
-Reittiloki access test ──┐
-                         ├─> Halloween slice (ingest → SQL → 2 Tableau views)
-MDB API client ──────────┘          │
-                                    ├─> more views (gaps, late-night, comparison)
-                                    ├─> observed vs planned
-                                    └─> case study write-up
+Phases 0–2 (done, signed off 6 Nov)
+
+Task 6 terms + pilot ── Task 7 batch pull ── Task 8 load + join ── Task 9 metrics ── Checkpoint 3
+                                                                       │                 │
+                                                                       └─ Task 11       Task 10 Tableau
+                                                                                          │
+                                                          Checkpoint 4 ── Task 5 README ── Task 12 publish ── Task 13 case study
 ```
+Start with Task 6 → 7 because of data retention.
 
 ---
 
@@ -92,7 +94,7 @@ Run Postgres with PostGIS, either from the Windows installer with Stack Builder 
 **Verify:** ~~The departure count for one stop and hour matches the HSL timetable.~~ Matched Reittiloki instead: 1,032 = 1,032 at terminal 1000003.
 **Files:** `src/build_db.py`, `sql/00_study_dates.sql`, `sql/01_geometry.sql`, `sql/02_services.sql`, `sql/03_departures.sql`
 
-### Task 4: First two Tableau views (M): built 6 Nov (save to Tableau Public pending)
+### Task 4: First two Tableau views (M): done 6 Nov (saved as `tableau/hsl.twb`; publishing is Task 12)
 **Result:** `python src/export.py` writes `data/exports/hsl_hourly.csv`, `hsl_stop_routes.csv` and `hsl_route_lines.geojson`. The dashboard (route map + hourly stacked bars + 3 BANs, Saturday/Routes parameters, click-a-route filter) was built in Tableau Public. Stops layer skipped for now.
 **Finding:** planned service is almost identical: Halloween 511,897 vs ordinary Saturday 511,709 (+0.04%), with only 22 of 266 routes changed. Of the 11 `_PY` (All Saints') routes, 8 have identical trip counts. The only real addition is Bus 24X (+270). The biggest differences are ordinary timetable changes (Train K +1,211, Bus 245A→245, Bus 712 gone). **The story moves to observed service (Phase 4).**
 
@@ -110,33 +112,143 @@ Clicking a route should filter the chart.
 **Verify:** Compare the dashboard's hourly totals with a SQL query.
 **Files:** `sql/04_exports.sql`, `src/export.py`, `tableau/` (workbook)
 
-### Checkpoint 2
-- [ ] Running from raw data to dashboard works end to end, repeatably, with one command or a short README.
-- [ ] Review the slice before expanding it.
+### Checkpoint 2: signed off 6 Nov
+- [x] Slice works end to end: raw APIs → Postgres → exports → Tableau dashboard. The repeatability proof (README + clean rebuild) moved to Task 5 in Phase 4.
+- [x] Review the slice before expanding it. **Decision (6 Nov):** planned service barely differs, so the story is observed reliability. Phase 3 is now observed service. The old "expand the planned analysis" ideas are in the backlog.
 
 ---
 
-## Phase 3: Expand the analysis (rough)
+## Phase 3: Observed service (concrete; the story is here)
 
-- **Service gaps:** headways per stop, route and direction, with the longest evening gaps.
-- **Late-night options:** direct routes from the origin, the last departure to each destination, and a reachable-without-transfers layer on the map.
-- **Comparison Saturday:** a side-by-side view that highlights the U-line and Hietaniemi differences.
-- **Open questions:** the exact origin stop, the destination list, and how headway is defined.
+**Question:** was Halloween night less reliable than an ordinary Saturday night, beyond the planned timetable?
 
-## Phase 4: Observed service (rough; Task 1 worked, so this is on)
+**Early signal (6 Nov):** at Rautatientori, after-midnight departures on Halloween night were more than 3 min late 14.1% of the time vs 2.6% on 17 Oct (p90 +233 s vs +86 s). Daytime is similar. One origin terminal with n ≈ 200, so this needs checking at scale.
 
-- Pull both service dates for each study day (for example, 30 + 31 Oct for Halloween), then filter by `plannedDepartureTime.departureDateTime`.
-- `isCancelled` is mostly `TIS_ERROR` (data errors). Use `cancellationType` and don't count raw `isCancelled`.
-- Run batched Reittiloki pulls for the chosen stops and routes on both dates, with rate limiting and cached raw JSON.
-- Join observed departures to planned departures, then build delay and cancellation views.
-- Add a coverage view that shows what share of planned departures have an observation, so gaps in the data are visible.
-- Optionally, add FMI weather as context.
+**Data plan (agreed 6 Nov):** Reittiloki `departures(terminalId, date)` for all 122 terminals (GTFS `location_type = 1`) × service dates 30 + 31 Oct and 16 + 17 Oct = about 490 requests. `cancellations(date)` gives the day's cancellations in one call. A full-journey query (`journeys`) exists if terminals turn out to be too origin-heavy.
 
-## Phase 5: Package (rough)
+### Task 6: Terms check and pilot pull (S) · good hands-on task
+Check HSL's terms for scripted Reittiloki use. Pull 3 terminals (one central, one suburban hub, one metro) × 4 dates with the existing probe, and check that the 30 Oct service date covers Sat 00:00–04:30.
 
-- Publish to Tableau Public.
-- Write a short case study covering the question, sources, method, findings and limits, including the All Saints' note, no transfers, and observed-data coverage.
-- Add HSL CC BY 4.0 attribution.
+**Acceptance**
+- [ ] Terms outcome recorded in `docs/sources.md` (allowed / unclear / not allowed) with a link.
+- [ ] 12 raw files saved. Each returns planned + observed, and 30 Oct contains departures after midnight.
+- [ ] Request timing noted (seconds per call), to size the batch.
+
+**Verify:** for one pilot terminal, planned count per service date = GTFS planned count (as with Rautatientori: 1,032 = 1,032).
+**Files:** `docs/sources.md`
+**Dependencies:** none. **Blocks** Task 7 if the terms say no.
+
+### Task 7: Batch pull, cached and rate-limited (S)
+Add a batch mode to `src/reittiloki_probe.py`: read terminal IDs from GTFS, loop over the 4 service dates, skip files that already exist, sleep ~1 s between calls, retry once on errors, and log failures.
+
+**Acceptance**
+- [ ] About 488 raw files in `data/raw/reittiloki/`. Failures listed, then retried successfully.
+- [ ] Rerunning makes 0 requests (everything cached).
+- [ ] `cancellations` saved for the 4 dates.
+
+**Verify:** file count = terminals × dates. Spot-check 2 files against the Reittiloki UI.
+**Files:** `src/reittiloki_probe.py`
+**Dependencies:** Task 6. **Do this early:** retention is about 4 months, so 16–17 Oct data expires around mid-Feb 2027.
+
+### Task 8: Load observed data and join to planned (M) · good hands-on SQL
+Load the raw JSON into `public.observed` (feed, stop_id, route_id, direction, planned_ts, observed_ts, delay_s, cancellation_type). Join it to each feed's `departures` on stop + route + direction + planned timestamp, restricted to the study window.
+
+**Acceptance**
+- [ ] ≥ 95% of in-window Reittiloki rows match a planned GTFS departure. Unmatched rows are counted and explained.
+- [ ] `observed_departures` exists per feed, with `is_observed`, `delay_s` and `real_cancel` (cancellationType ≠ `TIS_ERROR`).
+- [ ] The loader is idempotent (a rerun gives the same row counts).
+
+**Verify:** match rate per terminal. Any terminal below 90% is investigated (route ID mapping, time zones, `isNextDay`).
+**Files:** `src/load_observed.py`, `sql/05_observed.sql`
+**Dependencies:** Task 7 (can start on the pilot files from Task 6).
+
+### Task 9: Reliability metrics (S) · good hands-on SQL
+A view with reliability per feed × window hour × mode: n planned, % observed, median and p90 delay, % more than 3 min late, and real cancellations. Plus a Halloween-minus-ordinary comparison.
+
+**Acceptance**
+- [ ] SQL reproduces the Rautatientori signal (14.1% vs 2.6% after midnight) when filtered to terminal 1000003.
+- [ ] Every cell carries its n. Cells with n < 30 are flagged.
+- [ ] One answer: is the after-midnight difference present across terminals, or driven by one or two?
+
+**Verify:** recompute one cell by hand from raw JSON in Python.
+**Files:** `sql/06_reliability.sql`
+**Dependencies:** Task 8
+
+### Checkpoint 3
+- [ ] Is the late-night effect real across the network? Decide the headline with the user.
+- [ ] Coverage is good enough (% observed is similar on both dates, so missing data isn't driving the result).
+- [ ] Check FMI weather for both nights (a possible confounder).
+
+### Task 10: Reliability views in Tableau (M)
+Export the reliability views. Build a second dashboard or a new section: % late per hour, Halloween vs ordinary on one `window_hour` axis (two series, one axis); a terminal map coloured by change in % late (diverging, grey midpoint); and a coverage note.
+
+**Acceptance**
+- [ ] The headline from Checkpoint 3 is readable in under 10 seconds.
+- [ ] The Saturday/Routes parameters still work, or are deliberately left off this view.
+- [ ] Colours validated (diverging pair + grey midpoint), with a legend present.
+
+**Verify:** dashboard numbers = SQL view numbers for 3 cells.
+**Files:** `sql/04_exports.sql`, `src/export.py`, `tableau/hsl.twb`
+**Dependencies:** Checkpoint 3
+
+### Task 11: Which routes drive it (S, optional)
+Top routes by increase in % late after midnight (n ≥ 30 each date), as a ranked bar chart or table.
+
+**Acceptance**
+- [ ] A top-10 list with n, both dates' % late and the difference.
+- [ ] It shows whether night buses (N-routes) account for most of the effect.
+
+**Files:** `sql/06_reliability.sql`, `tableau/hsl.twb`
+**Dependencies:** Task 9
+
+### Checkpoint 4
+- [ ] The dashboard tells planned (same) → observed (different) in order.
+- [ ] Review with the user before packaging.
+
+---
+
+## Phase 4: Package
+
+### Task 5: README and clean rebuild (S) · moved here from Phase 2 on 6 Nov
+Write a short `README.md` covering setup (venv, `.env`, Docker), the pipeline commands in order, and "run `export.py` before opening `tableau/hsl.twb`". Prove it works by rebuilding from an empty database.
+
+**Acceptance**
+- [ ] `docker compose down -v`, then following the README from top to bottom, rebuilds both schemas and the exports.
+- [ ] The exports give the same totals as before (511,897 / 511,709).
+- [ ] `tableau/hsl.twb` opens and shows the same numbers.
+
+**Verify:** compare `hsl_hourly.csv` totals before and after the rebuild.
+**Files:** `README.md`
+
+### Task 12: Publish (S)
+Publish to Tableau Public, with HSL CC BY 4.0 attribution and the Mobility Database credit in the footer. Add the link to `docs/sources.md` and `README.md`.
+
+**Acceptance**
+- [ ] The public URL loads without the local data (extracts embedded).
+- [ ] Attribution is visible on every dashboard.
+
+**Files:** `README.md`, `docs/sources.md`, `tableau/hsl.twb`
+**Dependencies:** Checkpoint 4, Task 5
+
+### Task 13: Case study write-up (S)
+A one-page case study: question, sources, method (three service days, matching, TIS_ERROR handling), findings (planned same, observed different), and limits (terminals only, no transfers, observation coverage, one Saturday each).
+
+**Acceptance**
+- [ ] Every number in it traces to a query or file.
+- [ ] Limits are stated plainly.
+
+**Files:** `docs/case_study.md`
+**Dependencies:** Task 12
+
+### Checkpoint: Complete
+- [ ] All acceptance criteria met. Published link works.
+
+---
+
+## Backlog (not planned; add only if the story needs it)
+- Planned service gaps / headways per stop. Planned service barely differs, so this is low value.
+- Late-night reachability from an origin (direct routes only).
+- Stops layer on the route map.
 
 ---
 
@@ -148,4 +260,7 @@ Clicking a route should filter the chart.
 | Reittiloki terms of use forbid bulk scripted pulls | Medium | Check in Task 1. Keep Phase 4 pulls small, rate-limited and cached. |
 | Reittiloki retention (about 4 months) runs out before Phase 4 | Medium | Pull and cache the raw JSON for the chosen stops soon after Task 1, before the analysis is finished. |
 | GTFS is too big for Tableau | Medium | Aggregate in Postgres and export only small tables or extracts. |
-| The comparison shows little difference | Low | The holiday exceptions and observed delays carry the story. |
+| The comparison shows little difference | ~~Low~~ Happened (planned) | Planned service is the same. The story moved to observed reliability (Phase 3). |
+| Terminal departures are origin-heavy, so delays look small | Medium | Compare like with like (same terminals on both dates). If needed, add `journeys` for a few night routes to see mid-route delay. |
+| One Saturday each is a tiny sample; weather or events could explain the difference | Medium | Report n and coverage. Check FMI weather for both nights. Phrase findings as "on this night", not "Halloween causes". |
+| Reittiloki retention: 16–17 Oct expires about mid-Feb 2027 | High | Task 7 runs before any analysis. Raw JSON is cached. |
