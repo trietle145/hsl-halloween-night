@@ -21,3 +21,18 @@ SELECT window_hour,
        count(*) FILTER (WHERE is_observed) < 30 AS low_n
 FROM reliability_base
 GROUP BY window_hour, mode_group;
+
+-- for Tableau: counts per terminal x hour x mode, so % late = SUM(n_late) / SUM(n_observed) at any level
+CREATE OR REPLACE VIEW export_reliability AS
+SELECT b.terminal_id, s.stop_name AS terminal, s.stop_lat::float AS lat, s.stop_lon::float AS lon,
+       b.window_hour,
+       -- 1 Jan 2000 was a Saturday: one shared Sat -> Sun time axis for both feeds
+       timestamp '2000-01-01' + b.window_hour * interval '1 hour' AS window_time,
+       b.mode_group,
+       count(*) AS n_planned,
+       count(*) FILTER (WHERE b.is_observed) AS n_observed,
+       count(*) FILTER (WHERE b.delay_s > 180) AS n_late,
+       count(*) FILTER (WHERE b.real_cancel) AS real_cancels
+FROM reliability_base b
+JOIN stops s ON s.stop_id = b.terminal_id
+GROUP BY 1, 2, 3, 4, 5, 6, 7;

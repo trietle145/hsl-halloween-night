@@ -166,7 +166,7 @@ Load the raw JSON into `public.observed` (feed, stop_id, route_id, direction, pl
 **Dependencies:** Task 7 (can start on the pilot files from Task 6).
 
 ### Task 9: Reliability metrics (S): done 7 Nov
-**Result:** views `reliability_base` + `reliability` (hour × mode) in `sql/06_reliability.sql`; cross-feed checks in `sql/analysis/checks.sql`. Rautatientori after midnight 15.3% vs 3.0% (earlier 14.1 vs 2.6 was before dedupe). **Network-wide, bus only:** buses after midnight 35.9% vs 13.0% > 3 min late (median +60–100 s), evening 17.0 vs 11.2, day 11.2 vs 8.3, Fri-night early hours 23.0 vs 13.6. 12 of 13 terminals with n ≥ 30 are worse, 11 by > 5 pp; without Rautatientori + Hakaniemi still 23.2% vs 9.2%. Trains about the same (hours 26–27 worse, small n); metro has no night service; trams not covered. **Coverage caveat:** Hakaniemi baseline after midnight only 43% observed (146/337) vs 94% on Halloween; everything else 96–97% on both nights. Not yet checked: weather.
+**Result:** views `reliability_base` + `reliability` (hour × mode) in `sql/06_reliability.sql`; cross-feed checks in `sql/analysis/checks.sql`. Rautatientori after midnight 15.3% vs 3.0% (earlier 14.1 vs 2.6 was before dedupe). **Network-wide, bus only:** buses after midnight 35.9% vs 13.0% > 3 min late (median +60–100 s), evening 17.0 vs 11.2, day 11.2 vs 8.3, Fri-night early hours 23.0 vs 13.6. 12 of 13 terminals with n ≥ 30 are worse, 11 by > 5 pp; without Rautatientori + Hakaniemi still 23.2% vs 9.2%. Trains about the same (hours 26–27 worse, small n); metro has no night service; trams not covered. **Coverage caveat:** Hakaniemi baseline after midnight only 43% observed (146/337) vs 94% on Halloween; everything else 96–97% on both nights. Weather: both nights dry (FMI), ruled out.
 A view with reliability per feed × window hour × mode: n planned, % observed, median and p90 delay, % more than 3 min late, and real cancellations. Plus a Halloween-minus-ordinary comparison.
 
 **Acceptance**
@@ -181,7 +181,7 @@ A view with reliability per feed × window hour × mode: n planned, % observed, 
 ### Checkpoint 3
 - [ ] Is the late-night effect real across the network? Decide the headline with the user.
 - [ ] Coverage is good enough (% observed is similar on both dates, so missing data isn't driving the result).
-- [ ] Check FMI weather for both nights (a possible confounder).
+- [x] Check FMI weather for both nights (a possible confounder). **Done 9 Nov:** both nights dry (0.0 mm), Halloween mild and still; not a confounder. `src/fmi_weather.py`.
 
 ### Task 10: Reliability views in Tableau (M)
 Export the reliability views. Build a second dashboard or a new section: % late per hour, Halloween vs ordinary on one `window_hour` axis (two series, one axis); a terminal map coloured by change in % late (diverging, grey midpoint); and a coverage note.

@@ -82,6 +82,17 @@ Checked 6 Nov 2026. Free account, refresh token in `.env` as `MDB_REFRESH_TOKEN`
 | 30 Oct – 1 Nov (Halloween) | `mdb-865-202611010130` | 30 Oct – 28 Dec |
 | 16–17 Oct (baseline) | `mdb-865-202610180116` | 16 Oct – 14 Dec |
 
+## FMI weather observations
+
+Checked 9 Nov 2026. Public, no key.
+
+- **Endpoint:** `GET https://opendata.fmi.fi/wfs` with `service=WFS&version=2.0.0&request=getFeature&storedquery_id=fmi::observations::weather::hourly::simple&fmisid=<id>&starttime=<UTC>&endtime=<UTC>&parameters=...`. It returns flat XML (`BsWfs:BsWfsElement` = time, parameter, value).
+- **Stations:** `100971` Helsinki Kaisaniemi (city centre) and `100968` Helsinki-Vantaa airport.
+- **Parameters used:** `TA_PT1H_AVG/MIN` (°C), `PRA_PT1H_ACC` (precipitation mm/h), `WS_PT1H_AVG/MAX` (m/s), `WAWA_PT1H_RANK` (present-weather code, 0 = nothing). Each value covers the hour **ending** at its timestamp.
+- **Client:** [src/fmi_weather.py](../src/fmi_weather.py). Raw XML goes to `data/raw/fmi/<feed>_<fmisid>.xml`, cached.
+
+**Result:** the weather doesn't explain the late buses. Both nights (Sat 18:00 → Sun 04:00) were **dry** (0.0 mm, weather code 0 every hour, both stations). Halloween night was mild and still (6.5–7.8 °C, wind 1–2 m/s). The ordinary night was cooler with a light breeze (9 → 2–3 °C, wind 3.5–4.5 m/s, lowest 1.7 °C at the airport at 04:00, dry, so no ice).
+
 ## Licence
 
-HSL data is CC BY 4.0. Attribute "HSL" on the dashboard.
+HSL and FMI data are CC BY 4.0. Attribute "HSL" and "FMI" on the dashboard.

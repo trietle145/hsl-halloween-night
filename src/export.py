@@ -11,7 +11,7 @@ OUT = Path("data/exports")
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
     with connect() as conn:
-        for view in ["export_hourly", "export_stop_routes"]:
+        for view in ["export_hourly", "export_stop_routes", "export_reliability"]:
             path = OUT / f"hsl_{view.removeprefix('export_')}.csv"
             with open(path, "w", newline="", encoding="utf-8") as f:
                 w = csv.writer(f, quoting=csv.QUOTE_NONNUMERIC)
