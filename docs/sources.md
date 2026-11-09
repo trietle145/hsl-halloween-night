@@ -96,3 +96,7 @@ Checked 9 Nov 2026. Public, no key.
 ## Licence
 
 HSL and FMI data are CC BY 4.0. Attribute "HSL" and "FMI" on the dashboard.
+
+## Published dashboard
+
+https://public.tableau.com/app/profile/triet.le3679/viz/hsl/Plannedservices: two dashboards, "Planned services" and "Halloween night".

@@ -31,7 +31,7 @@ python src/export.py
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────┐
-│ Halloween night on HSL                                       [Mode: Bus ▾] │ header
+│ Halloween night on HSL                                                     │ header
 │ Same timetable as an ordinary Saturday, but after midnight buses ran       │
 │ late almost three times as often                                           │
 ├──────────────────────────────────────┬─────────────────────────────────────┤
@@ -78,6 +78,8 @@ The warm/cool logic carries across the whole dashboard: orange line = Halloween,
 - BAN number: Tableau Semibold 32, in the series colour (see the BAN step)
 - BAN label: Tableau Book 9, secondary, 3 short lines
 - Axes, legends, footer: Tableau Book 9, muted
+
+**How to read the tooltip and label snippets below:** `<Field>` means **Insert ▸ Field** in the editor. Don't type it: typed text stays literal. A field only shows up under Insert once it's on the Marks card, so drag it onto **Tooltip** first if it's missing. Text in `(parentheses)` is formatting to apply with the font controls, not text to type.
 
 **Rules:** one y-axis (no dual axis). No number on every point: the two line ends are labelled and the tooltips carry the rest. The grid is a hairline with no borders. Every big number says what it counts.
 
@@ -147,13 +149,15 @@ SUM(IF [Feed] = "baseline" THEN [N Observed] END) / SUM(IF [Feed] = "baseline" T
 2. **% Late** → Rows. Marks type: **Line**.
 3. **Saturday** → Color → Edit Colors: Halloween `#EB6834`, Ordinary `#2A78D6`.
 4. Size: drag the slider to about the 2nd notch, so the lines are thin (about 2 px).
-5. **Mode Group** → Filters → select **Bus** only → right-click the filter → **Show Filter**. On the filter card: ▾ → **Single Value (dropdown)**, and ▾ → **Apply to Worksheets → All Using This Data Source**.
-6. **Direct labels**: drag **Saturday** to Label as well. Click Label → *Label line ends*, font Tableau Book 9. Click the text "…" and set it to `<Saturday>`, plus `<% Late>` on a new line. Then **hide the colour legend**: the labelled line ends replace it, and the mode filter is enough chrome. (The dataviz rule is a legend *or* direct labels when there are ≤ 4 series. Two labelled lines read faster.)
+5. **Mode Group** → Filters → select **Bus** only → right-click the filter → **Apply to Worksheets → All Using This Data Source**. Bus only: the metro has no night service, there are no tram terminals, and train terminals have too few night departures, so the other modes show empty or noisy charts. Don't show the filter on the dashboard.
+6. **Direct labels**: drag **Saturday** and **% Late** to Label. Click Label → *Line Ends*, untick *Label start of line*, font Tableau Book 9. Click the text "…" and check it reads `<Saturday>`, plus `<AGG(% Late)>` on a new line. Then **hide the colour legend**: the labelled line ends replace it, and the mode filter is enough chrome. (The dataviz rule is a legend *or* direct labels when there are ≤ 4 series. Two labelled lines read faster.)
 7. **After-midnight band**: Analytics pane → drag **Reference Band** onto the chart → *Table*, on **Window Time**.
-   - Band from: Constant `2/1/2000 00:00` (Sun 00:00). Band to: Constant `2/1/2000 04:00`. The date format follows your Tableau locale, so pick it from the date picker.
-   - Fill `#F0EFEC`, no line. Label: Custom `after midnight`, Tableau Book 9, muted, top.
+   - Tableau reads dates as **month/day/year**, so Sunday 2 Jan is `1/2/2000`.
+   - Band from: Constant `1/2/2000 12:00:00 AM` (Sun 00:00), label **None**.
+   - Band to: Constant `1/2/2000 4:00:00 AM` (Sun 04:00), label Custom `after midnight`, Tableau Book 9, muted.
+   - Fill `#F0EFEC`, no line.
    - Right-click the band → **Format → move to back**, if the lines don't draw on top.
-8. **X axis**: right-click → Edit Axis → Tick marks *Fixed*, every **6 hours**, starting `1/1/2000 00:00`. Format → Dates → Custom `ddd HH:mm`, which shows *Sat 18:00*, *Sun 00:00*. Clear the axis title.
+8. **X axis**: right-click → Edit Axis → Range **Fixed** from `1/1/2000 12:00:00 AM` to `1/2/2000 4:00:00 AM`, so the band can't stretch the axis. Tick marks *Fixed*, every **6 hours**, starting `1/1/2000 12:00:00 AM`. Format → Dates → Custom `ddd HH:mm`, which shows *Sat 18:00*, *Sun 00:00*. Clear the axis title.
 9. **Y axis**: Edit Axis → *Include zero*, fixed start 0. Title `% departures > 3 min late`. Ticks Tableau Book 9, muted.
 10. **Format → Lines**: Rows grid lines thin `#E1E0D9`. Columns: none. Zero line `#C3C2B7`. **Format → Borders**: all *None*.
 11. **Tooltip**:
@@ -169,7 +173,7 @@ SUM(IF [Feed] = "baseline" THEN [N Observed] END) / SUM(IF [Feed] = "baseline" T
 1. Double-click **Lon**, then **Lat** (Tableau puts AVG(Lon) in Columns and AVG(Lat) in Rows and draws a map).
 2. **Terminal Id** → Detail and **Terminal** → Detail. That gives one dot per terminal.
 3. **Window Hour** → Filters → *All values* → Range of values → **At least 24**. This map shows **after midnight only**.
-4. **Enough Data** → Filters → **True**. You should see **13 dots** with Mode = Bus.
+4. **Enough Data** → Filters → **True**. You should see **13 dots** (buses).
 5. **Change (pp)** → Color → Edit Colors → *Custom Diverging*:
    - Left `#2A78D6`, right `#E34948`.
    - Advanced: **Start −40, End +40, Center 0**. The scale must be symmetric, so that grey honestly means "no change".
@@ -192,7 +196,7 @@ SUM(IF [Feed] = "baseline" THEN [N Observed] END) / SUM(IF [Feed] = "baseline" T
 
 ## 5. BAN sheets
 
-Three small sheets. On each one, add a **Window Hour** filter of **at least 24**, because the numbers are about after midnight. The Mode filter already applies to them.
+Three small sheets. On each one, add a **Window Hour** filter of **at least 24**, because the numbers are about after midnight. The Bus filter already applies to them.
 
 | Sheet | Text card | Number colour | Label (3 lines) |
 |---|---|---|---|
@@ -215,7 +219,7 @@ The `12 / 13` comes from `sql/analysis/checks.sql` (query 5b). If the data chang
      - **Text** on the left:
        - Line 1: `Halloween night on HSL` (title)
        - Line 2: `Same timetable as an ordinary Saturday, but after midnight buses ran late almost three times as often` (subtitle)
-     - The **Mode Group** filter card on the right, as a compact dropdown with the title `Mode`.
+     - (No filter card. The dashboard is bus only, see the line chart step 5.)
    - **Body**: a horizontal container.
      - **Left (about 45%)**: a vertical container with the BAN row on top (BAN Halloween, BAN Ordinary, BAN Terminals text side by side, about 120 px tall), then **Late by hour** below.
      - **Right (about 55%)**: **Terminal map**, with its colour legend floating bottom-left inside the map, or tiled under it.
@@ -240,7 +244,7 @@ Click Hakaniemi and the line and numbers show only Hakaniemi. Click empty map sp
 
 ## 8. Checks
 
-With Mode = **Bus** and nothing selected:
+With nothing selected:
 
 | What | Expected |
 |---|---|
@@ -251,7 +255,6 @@ With Mode = **Bus** and nothing selected:
 | Westendinasema tooltip | 63% vs 23% (**+40.0 pp**), the reddest dot |
 | Lentoasema tooltip | 17% vs 17% (**0 pp**), grey |
 | Click Rautatientori | BANs **15%** / **3%** |
-| Mode = Metro | Line drops to near 0. Metro has no night service, so the BANs go blank or show 0, and that's expected. |
 
 All of these come from `data/exports/hsl_reliability.csv` (checked with Python) and `sql/analysis/checks.sql`.
 

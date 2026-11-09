@@ -183,13 +183,14 @@ A view with reliability per feed × window hour × mode: n planned, % observed, 
 - [ ] Coverage is good enough (% observed is similar on both dates, so missing data isn't driving the result).
 - [x] Check FMI weather for both nights (a possible confounder). **Done 9 Nov:** both nights dry (0.0 mm), Halloween mild and still; not a confounder. `src/fmi_weather.py`.
 
-### Task 10: Reliability views in Tableau (M)
+### Task 10: Reliability views in Tableau (M): done 9 Nov
+**Result:** dashboard "Halloween night" in `tableau/hsl.twb` (build guide `docs/dashboard.md`, data `hsl_reliability.csv`). BANs 36% vs 13%, 12/13 text, late-by-hour line with after-midnight band, terminal map (diverging, ±40 pp) with click-to-filter. Bus only (metro no night service, no tram terminals, trains too few). Checked: 36/13, Rautatientori 15/3, Hakaniemi 48/21. Extract still needed before publishing.
 Export the reliability views. Build a second dashboard or a new section: % late per hour, Halloween vs ordinary on one `window_hour` axis (two series, one axis); a terminal map coloured by change in % late (diverging, grey midpoint); and a coverage note.
 
 **Acceptance**
-- [ ] The headline from Checkpoint 3 is readable in under 10 seconds.
-- [ ] The Saturday/Routes parameters still work, or are deliberately left off this view.
-- [ ] Colours validated (diverging pair + grey midpoint), with a legend present.
+- [x] The headline from Checkpoint 3 is readable in under 10 seconds.
+- [x] The Saturday/Routes parameters still work, or are deliberately left off this view. (Left off; the view is bus only, no Mode filter.)
+- [x] Colours validated (diverging pair + grey midpoint), with a legend present.
 
 **Verify:** dashboard numbers = SQL view numbers for 3 cells.
 **Files:** `sql/04_exports.sql`, `src/export.py`, `tableau/hsl.twb`
@@ -224,7 +225,8 @@ Write a short `README.md` covering setup (venv, `.env`, Docker), the pipeline co
 **Verify:** compare `hsl_hourly.csv` totals before and after the rebuild.
 **Files:** `README.md`
 
-### Task 12: Publish (S)
+### Task 12: Publish (S): published 9 Nov, polish left
+**Result:** https://public.tableau.com/app/profile/triet.le3679/viz/hsl/Plannedservices, tabs on. Left: hide worksheet tabs, zoom terminal map out one notch, optional Story, link in README.
 Publish to Tableau Public, with HSL CC BY 4.0 attribution and the Mobility Database credit in the footer. Add the link to `docs/sources.md` and `README.md`.
 
 **Acceptance**
