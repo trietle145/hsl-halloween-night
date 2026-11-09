@@ -1,6 +1,11 @@
 CLAUDE.md
 .env
 .venv/
-data/
 __pycache__/
 scratch.sh
+# raw downloads and extracts are rebuilt by the pipeline; the small exports are committed
+data/*
+!data/exports/
+data/exports/*.hyper
+# Tableau autosave / recovery files
+tableau/~*
