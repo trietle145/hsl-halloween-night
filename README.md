@@ -7,9 +7,7 @@ A data-analysis portfolio project. It compares Helsinki's public transport (HSL)
 | Deliverable | Where |
 |---|---|
 | **Tableau Public dashboards** (two tabs: the timetable, then Halloween night) | [Live dashboards](https://public.tableau.com/app/profile/triet.le3679/viz/hsl/Plannedservices) · [`tableau/hsl.twb`](tableau/hsl.twb) |
-| **Dashboard build guide** (every step, colour and check) | [`docs/dashboard.md`](docs/dashboard.md) |
 | **Pipeline** (Python stdlib + PostgreSQL/PostGIS SQL) | `src/`, `sql/` |
-| **Data sources and API notes** | [`docs/sources.md`](docs/sources.md) |
 | **Checks behind every headline number** | [`sql/analysis/checks.sql`](sql/analysis/checks.sql) |
 
 ## Key findings
@@ -95,7 +93,7 @@ python src/fmi_weather.py
 docker compose exec -T db psql -U hsl -d hsl -f - < sql/analysis/checks.sql
 ```
 
-**Verified 9 Nov 2026:** wiping the database (`docker compose down -v`) and running steps 1–3 from the cached raw files rebuilds both schemas and gives identical exports (511,897 / 511,709 planned departures; 35.9% / 13.0% of night buses late).
+Expected results: 511,897 / 511,709 planned departures, and 35.9% / 13.0% of night buses late. Building one GTFS schema takes about 10 minutes.
 
 **Two things to know:**
 - **Reittiloki keeps data for about four months.** The October 2026 observations can't be re-downloaded after about mid-February 2027. That's why the exports in `data/exports/` are committed: the dashboards and their numbers survive even when step 2 no longer can.
@@ -108,8 +106,6 @@ docker compose exec -T db psql -U hsl -d hsl -f - < sql/analysis/checks.sql
 | [Mobility Database](https://mobilitydatabase.org) (feed `mdb-865`) | Archived HSL GTFS: the timetable that was live on each Saturday (snapshots `mdb-865-202611010130`, `mdb-865-202610180116`) | Free account. GTFS data © HSL, CC BY 4.0 |
 | [Reittiloki](https://reittiloki.hsl.fi) (HSL transitlog) | Observed departures and cancellations at all 122 terminals | Public GraphQL, no key. No terms specific to scripted use found, so pulls were sequential, cached and about 1 request per second. HSL data, CC BY 4.0 |
 | [FMI open data](https://en.ilmatieteenlaitos.fi/open-data) | Hourly weather at Helsinki Kaisaniemi and Helsinki-Vantaa | Public WFS, no key. CC BY 4.0 |
-
-Details of every endpoint, query and quirk: [`docs/sources.md`](docs/sources.md).
 
 Data credit: HSL (Helsinki Regional Transport Authority), Mobility Database, Finnish Meteorological Institute.
 
@@ -128,7 +124,6 @@ Data credit: HSL (Helsinki Regional Transport Authority), Mobility Database, Fin
 ├── data/raw/          downloads, git-ignored (GTFS zips, Reittiloki JSON, FMI XML)
 ├── data/exports/      Tableau-ready CSV / GeoJSON (committed)
 ├── tableau/           hsl.twb workbook and dashboard screenshots
-├── docs/              sources and API notes, dashboard build guide
 ├── compose.yaml       Postgres 17 + PostGIS
 └── .env.example       settings to copy into .env
 ```

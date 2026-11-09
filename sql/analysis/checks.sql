@@ -1,5 +1,13 @@
 -- reliability checks across both feeds: run by hand (psql -f), not by load_observed.py
 
+-- 1. planned departures in the 28 h window, per feed
+SELECT 'halloween' AS feed, count(*) AS planned FROM halloween.departures
+UNION ALL SELECT 'baseline', count(*) FROM baseline.departures;
+
+-- 2. how many in-window Reittiloki departures matched a planned GTFS departure
+SELECT 'halloween' AS feed, count(*) AS n, round(100.0 * avg(matched::int), 1) AS pct_matched FROM halloween.observed_departures
+UNION ALL SELECT 'baseline', count(*), round(100.0 * avg(matched::int), 1) FROM baseline.observed_departures;
+
 -- 4. Halloween minus ordinary Saturday, per hour x mode (night hours)
 SELECT window_hour, mode_group,
        h.n_observed AS n_hal, b.n_observed AS n_base,
